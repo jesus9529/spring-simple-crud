@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping(path="/v1")
@@ -29,7 +31,10 @@ public class UserController {
 
     @GetMapping(path="/users/{id}")
     public ResponseEntity<User> getUserById(@PathVariable(value = "id") Integer userId) {
-        User user = userRepository.findById(userId).get();
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User " + userId + " not found");
+        }
         return ResponseEntity.ok().body(user);
     }
 
@@ -40,7 +45,10 @@ public class UserController {
 
     @PutMapping(path="/users/{id}")
     public ResponseEntity<User> updateUser(@PathVariable(value = "id") Integer userId, @Valid @RequestBody User userData, BindingResult bindingResult) {
-        User user = userRepository.findById(userId).get();
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User " + userId + " not found");
+        }
         user.setName(userData.getName());
         user.setSurname(userData.getSurname());
         user.setEmail(userData.getEmail());
@@ -50,7 +58,10 @@ public class UserController {
 
     @DeleteMapping(path="users/{id}")
     public Map<String, Boolean> deleteUser(@PathVariable(value = "id") Integer userId) {
-        User user = userRepository.findById(userId).get();
+        User user = userRepository.findById(userId).orElse(null);
+        if (user == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User " + userId + " not found");
+        }
         userRepository.delete(user);
         Map<String, Boolean> response = new HashMap<>();
         response.put("deleted", Boolean.TRUE);
